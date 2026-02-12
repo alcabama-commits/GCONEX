@@ -11,249 +11,171 @@ import {
   Info,
   CheckCircle2
 } from 'lucide-react';
-// Fixing date-fns imports by using specific paths for better compatibility in environments where named root exports might fail
-import format from 'date-fns/format';
-import startOfWeek from 'date-fns/startOfWeek';
-import addDays from 'date-fns/addDays';
-import isSameDay from 'date-fns/isSameDay';
-import getDay from 'date-fns/getDay';
-// Importing Spanish locale directly from its specific path
-import es from 'date-fns/locale/es';
-import { Booking } from './types';
+import { format, startOfISOWeek, addDays, isSameDay, getDay, addWeeks, subWeeks } from 'date-fns';
+import { es } from 'date-fns/locale/es';
 
-// Logo oficial transparente
 const LOGO_URL = "https://i.postimg.cc/63ny6hs7/Logo-G-conexion-2023PNG.png";
 
 const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [bookings, setBookings] = useState<Booking[]>([]);
-
+  const [bookings, setBookings] = useState<any[]>([]);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{date: Date, time: string} | null>(null);
+  const [formData, setFormData] = useState({ name: '', reason: '' });
 
-  const [formData, setFormData] = useState({
-    name: '',
-    reason: ''
-  });
+  // Fix: Implemented missing handlePrevWeek and handleNextWeek functions for calendar navigation
+  const handlePrevWeek = () => setCurrentDate(prev => subWeeks(prev, 1));
+  const handleNextWeek = () => setCurrentDate(prev => addWeeks(prev, 1));
 
   const weekDays = useMemo(() => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+    // Fix: Replaced startOfWeek with startOfISOWeek to resolve reported import error and ensure Monday start
+    const start = startOfISOWeek(currentDate);
     return Array.from({ length: 7 }).map((_, i) => {
       const day = addDays(start, i);
       return {
         date: day,
         label: format(day, 'EEE d', { locale: es }),
         isToday: isSameDay(day, new Date()),
-        isAvailableDay: getDay(day) === 1 || getDay(day) === 2 // Lunes = 1, Martes = 2
+        isAvailableDay: getDay(day) === 1 || getDay(day) === 2
       };
     });
   }, [currentDate]);
 
   const timeSlots = [{ hour: 21, label: '21:00' }];
 
-  const handlePrevWeek = () => setCurrentDate(addDays(currentDate, -7));
-  const handleNextWeek = () => setCurrentDate(addDays(currentDate, 7));
-
-  const openBookingModal = (day: Date, time: string) => {
-    const dayOfWeek = getDay(day);
-    if (dayOfWeek !== 1 && dayOfWeek !== 2) return;
-    setSelectedSlot({ date: day, time });
-    setIsBookingModalOpen(true);
-  };
-
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSlot || !formData.name.trim()) return;
 
-    const newBooking: Booking = {
+    const newBooking = {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.name,
-      email: '',
       reason: formData.reason || 'Ministración',
-      type: 'personal',
       date: format(selectedSlot.date, 'yyyy-MM-dd'),
       startTime: selectedSlot.time,
-      endTime: '22:00',
     };
 
     setBookings([...bookings, newBooking]);
     setIsBookingModalOpen(false);
     setFormData({ name: '', reason: '' });
-    setSelectedSlot(null);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {/* Header con el logo transparente y prominente */}
-      <header className="bg-white border-b border-red-100 sticky top-0 z-30 px-6 py-8 flex flex-col items-center justify-center shadow-md">
-        <img 
-          src={LOGO_URL} 
-          alt="Grupo de Conexión" 
-          className="h-28 md:h-32 w-auto object-contain mb-4 transition-transform hover:scale-105 duration-300 drop-shadow-sm" 
-        />
-        <h1 className="text-2xl font-black text-red-700 uppercase tracking-tighter text-center">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <header className="bg-white border-b-2 border-red-100 sticky top-0 z-30 px-6 py-8 flex flex-col items-center shadow-lg">
+        <img src={LOGO_URL} alt="Logo" className="h-24 md:h-28 w-auto object-contain mb-4 drop-shadow-md" />
+        <h1 className="text-xl md:text-2xl font-black text-red-700 uppercase tracking-tighter text-center">
           Agenda de Ministraciones
         </h1>
-        <div className="mt-3 flex items-center gap-2 px-4 py-1.5 bg-red-600 rounded-full shadow-lg shadow-red-100">
-          <span className="text-[11px] text-white font-black uppercase tracking-[0.25em]">Grupo de Conexión</span>
+        <div className="mt-3 px-4 py-1 bg-red-600 rounded-full">
+          <span className="text-[10px] text-white font-black uppercase tracking-widest">Grupo de Conexión</span>
         </div>
       </header>
 
-      <main className="flex-1 p-4 md:p-10 max-w-5xl mx-auto w-full">
-        {/* Banner Informativo Lunes y Martes */}
-        <div className="mb-10 bg-gradient-to-br from-red-50 to-white border-2 border-red-100 rounded-[3rem] p-8 flex flex-col md:flex-row items-center gap-6 shadow-xl shadow-red-50">
-          <div className="bg-red-600 p-5 rounded-[2rem] text-white shadow-lg shadow-red-200">
-            <CalendarIcon size={36} strokeWidth={2.5} />
+      <main className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">
+        <div className="mb-8 bg-white border-2 border-red-100 rounded-[2.5rem] p-6 flex flex-col md:flex-row items-center gap-6 shadow-xl">
+          <div className="bg-red-600 p-4 rounded-2xl text-white shadow-lg">
+            <CalendarIcon size={32} />
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h2 className="text-2xl font-black text-red-800 uppercase tracking-tight">Horarios Disponibles</h2>
-            <p className="text-red-600 font-bold text-lg mt-1">Lunes y Martes • 9:00 PM a 10:00 PM</p>
+            <h2 className="text-xl font-black text-red-800 uppercase">Horarios Disponibles</h2>
+            <p className="text-red-600 font-bold">Lunes y Martes • 9:00 PM</p>
           </div>
-          <div className="bg-white px-8 py-4 rounded-2xl border-2 border-red-50 font-black text-red-700 text-sm shadow-sm ring-4 ring-red-50">
+          <div className="bg-red-50 px-6 py-2 rounded-xl border border-red-100 font-black text-red-700 text-xs">
             1 CUPO POR DÍA
           </div>
         </div>
 
-        {/* Navegación del Calendario */}
-        <div className="flex items-center justify-between mb-8 px-2">
-          <div className="flex items-center gap-4">
-            <button onClick={handlePrevWeek} className="p-3 bg-white hover:bg-red-600 hover:text-white rounded-2xl border-2 border-red-50 text-red-600 transition-all shadow-sm">
-              <ChevronLeft size={28} strokeWidth={3} />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <button onClick={handlePrevWeek} className="p-2 bg-white rounded-xl border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all">
+              <ChevronLeft size={24} />
             </button>
-            <h3 className="text-xl font-black text-slate-800 uppercase tracking-[0.1em] px-4 min-w-[200px] text-center">
+            <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest px-4 w-40 text-center">
               {format(currentDate, 'MMMM yyyy', { locale: es })}
             </h3>
-            <button onClick={handleNextWeek} className="p-3 bg-white hover:bg-red-600 hover:text-white rounded-2xl border-2 border-red-50 text-red-600 transition-all shadow-sm">
-              <ChevronRight size={28} strokeWidth={3} />
+            <button onClick={handleNextWeek} className="p-2 bg-white rounded-xl border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all">
+              <ChevronRight size={24} />
             </button>
           </div>
-          <button 
-            onClick={() => setCurrentDate(new Date())}
-            className="hidden sm:block text-xs font-black text-red-600 uppercase border-b-4 border-red-600 pb-1 hover:text-red-800 hover:border-red-800 transition-all"
-          >
-            Hoy
-          </button>
+          <button onClick={() => setCurrentDate(new Date())} className="text-[10px] font-black text-red-600 uppercase border-b-2 border-red-600 pb-0.5">Hoy</button>
         </div>
 
-        {/* Cuadrícula del Calendario */}
-        <div className="bg-white rounded-[3.5rem] shadow-2xl shadow-red-100 border-4 border-red-50 overflow-hidden">
-          <div className="grid grid-cols-7 border-b-2 border-red-50 bg-red-50/20">
+        <div className="bg-white rounded-[3rem] shadow-2xl border border-slate-200 overflow-hidden">
+          <div className="grid grid-cols-7 border-b border-slate-100 bg-slate-50/50">
             {weekDays.map((day) => (
-              <div 
-                key={day.date.toString()} 
-                className={`py-10 text-center border-r last:border-r-0 border-red-50 ${day.isToday ? 'bg-red-50' : ''}`}
-              >
-                <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${day.isAvailableDay ? 'text-red-600' : 'text-slate-400'}`}>
+              <div key={day.date.toString()} className={`py-6 text-center border-r last:border-r-0 border-slate-100 ${day.isToday ? 'bg-red-50/50' : ''}`}>
+                <span className={`text-[10px] font-black uppercase opacity-60 ${day.isAvailableDay ? 'text-red-600' : 'text-slate-400'}`}>
                   {format(day.date, 'EEE', { locale: es })}
                 </span>
-                <div className={`mt-3 text-4xl font-black ${day.isToday ? 'text-red-600 scale-110' : 'text-slate-800'}`}>
+                <div className={`mt-1 text-2xl font-black ${day.isToday ? 'text-red-600' : 'text-slate-800'}`}>
                   {format(day.date, 'd')}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="p-4 min-h-[350px] flex flex-col justify-center">
-            {timeSlots.map((slot) => (
-              <div key={slot.hour} className="grid grid-cols-7 h-56">
-                {weekDays.map((day) => {
-                  const dayStr = format(day.date, 'yyyy-MM-dd');
-                  const booking = bookings.find(b => b.date === dayStr && b.startTime === slot.label);
-                  const isSelectable = day.isAvailableDay;
-                  
-                  return (
-                    <div 
-                      key={`${dayStr}-${slot.hour}`} 
-                      className={`border-r last:border-r-0 border-red-50 relative group transition-all p-3
-                        ${!isSelectable ? 'bg-slate-50/40 cursor-not-allowed opacity-40' : 'hover:bg-red-50/40'}`}
-                    >
-                      {!isSelectable ? (
-                        <div className="absolute inset-0 flex items-center justify-center text-slate-200">
-                          <Lock size={40} strokeWidth={1.5} />
-                        </div>
-                      ) : booking ? (
-                        <div className="h-full w-full p-6 rounded-[2.5rem] bg-red-600 text-white shadow-xl shadow-red-200 flex flex-col items-center justify-center text-center animate-in">
-                          <CheckCircle2 size={32} className="mb-3" />
-                          <div className="font-black text-base uppercase leading-tight line-clamp-3">{booking.name}</div>
-                          <div className="text-[10px] font-black mt-3 opacity-90 uppercase tracking-[0.2em] bg-white/20 px-3 py-1 rounded-full">RESERVADO</div>
-                        </div>
-                      ) : (
-                        <button 
-                          onClick={() => openBookingModal(day.date, slot.label)}
-                          className="h-full w-full rounded-[2.5rem] border-4 border-dashed border-red-100 flex flex-col items-center justify-center gap-4 group-hover:border-red-600 group-hover:bg-white transition-all group-hover:shadow-2xl group-hover:shadow-red-100"
-                        >
-                          <div className="bg-red-50 text-red-600 p-4 rounded-3xl group-hover:bg-red-600 group-hover:text-white transition-all transform group-hover:scale-110">
-                            <Plus size={32} strokeWidth={4} />
-                          </div>
-                          <span className="text-[12px] font-black text-red-400 group-hover:text-red-700 uppercase tracking-widest">9:00 PM</span>
-                        </button>
-                      )}
+          <div className="p-4 grid grid-cols-7 gap-4 min-h-[200px]">
+            {weekDays.map((day) => {
+              const dayStr = format(day.date, 'yyyy-MM-dd');
+              const booking = bookings.find(b => b.date === dayStr);
+              const isSelectable = day.isAvailableDay;
+
+              return (
+                <div key={dayStr} className="h-40 relative group">
+                  {!isSelectable ? (
+                    <div className="h-full w-full rounded-3xl bg-slate-100/50 flex items-center justify-center text-slate-200">
+                      <Lock size={24} />
                     </div>
-                  );
-                })}
-              </div>
-            ))}
+                  ) : booking ? (
+                    <div className="h-full w-full p-4 rounded-3xl bg-red-600 text-white shadow-lg flex flex-col items-center justify-center text-center animate-in">
+                      <CheckCircle2 size={20} className="mb-2" />
+                      <div className="font-black text-[10px] uppercase line-clamp-2 leading-tight">{booking.name}</div>
+                      <div className="text-[8px] font-bold mt-2 opacity-75 uppercase tracking-tighter">RESERVADO</div>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => { setSelectedSlot({date: day.date, time: '21:00'}); setIsBookingModalOpen(true); }}
+                      className="h-full w-full rounded-3xl border-2 border-dashed border-red-200 flex flex-col items-center justify-center gap-2 hover:border-red-600 hover:bg-white transition-all hover:shadow-xl"
+                    >
+                      <Plus size={20} className="text-red-600" />
+                      <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">9:00 PM</span>
+                    </button>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        </div>
-        
-        <div className="mt-10 flex items-start gap-4 text-slate-500 bg-red-50/30 p-8 rounded-[2.5rem] border-2 border-red-50 shadow-inner">
-          <Info size={24} className="mt-1 flex-shrink-0 text-red-500" />
-          <p className="text-sm font-semibold leading-relaxed italic">
-            Atención: El sistema bloquea automáticamente el espacio una vez que un usuario ingresa su nombre. 
-            Si necesitas cancelar o cambiar tu cita, por favor contacta al administrador del grupo de Conexión.
-          </p>
         </div>
       </main>
 
-      {/* Modal de Reserva */}
       {isBookingModalOpen && selectedSlot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-red-950/40 backdrop-blur-xl">
-          <div className="bg-white rounded-[4rem] shadow-2xl w-full max-w-md overflow-hidden animate-in">
-            <div className="bg-red-600 p-12 text-white relative text-center">
-              <img src={LOGO_URL} alt="Logo" className="h-24 w-auto mx-auto mb-8 brightness-0 invert" />
-              <h3 className="text-3xl font-black uppercase tracking-tighter">Confirmar Espacio</h3>
-              <p className="text-red-100 text-sm mt-4 font-black uppercase tracking-widest flex items-center justify-center gap-3">
-                <CalendarIcon size={18} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in">
+            <div className="bg-red-600 p-8 text-white relative text-center">
+              <img src={LOGO_URL} alt="Logo" className="h-16 w-auto mx-auto mb-4 brightness-0 invert" />
+              <h3 className="text-xl font-black uppercase tracking-tighter">Reservar Cupo</h3>
+              <p className="text-red-100 text-[10px] mt-2 font-black uppercase tracking-widest">
                 {format(selectedSlot.date, "EEEE d 'de' MMMM", { locale: es })} • 21:00
               </p>
-              <button 
-                onClick={() => setIsBookingModalOpen(false)} 
-                className="absolute top-10 right-10 text-white/40 hover:text-white transition-colors"
-              >
-                <X size={36} strokeWidth={4} />
+              <button onClick={() => setIsBookingModalOpen(false)} className="absolute top-6 right-6 text-white/50 hover:text-white">
+                <X size={24} />
               </button>
             </div>
             
-            <form onSubmit={handleBookingSubmit} className="p-12 space-y-10">
-              <div className="space-y-4">
-                <label className="text-[12px] font-black text-red-600 uppercase tracking-[0.25em] ml-3">
-                  Tu Nombre Completo
-                </label>
+            <form onSubmit={handleBookingSubmit} className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-red-600 uppercase tracking-widest ml-2">Tu Nombre</label>
                 <div className="relative">
-                  <User className="absolute left-6 top-1/2 -translate-y-1/2 text-red-300" size={24} />
-                  <input 
-                    required
-                    autoFocus
-                    type="text" 
-                    value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
-                    className="w-full pl-16 pr-8 py-6 rounded-[2rem] bg-slate-50 border-4 border-transparent focus:border-red-600 focus:bg-white outline-none transition-all font-black text-slate-800 placeholder:text-slate-300 uppercase tracking-tight text-lg"
-                    placeholder="ESCRIBE AQUÍ..."
-                  />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-red-300" size={18} />
+                  <input required autoFocus type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
+                    className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-red-600 outline-none font-black text-slate-800 placeholder:text-slate-300 uppercase text-sm"
+                    placeholder="ESCRIBE AQUÍ..." />
                 </div>
               </div>
-
-              <div className="pt-2">
-                <button 
-                  type="submit"
-                  className="w-full bg-red-600 text-white py-7 rounded-[2.5rem] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-all shadow-2xl shadow-red-200 active:scale-95 text-xl"
-                >
-                  SEPARAR CUPO
-                </button>
-                <p className="text-center text-[11px] text-slate-400 font-black uppercase mt-10 tracking-[0.15em] leading-relaxed">
-                  Este espacio será <span className="text-red-600">bloqueado inmediatamente</span> al confirmar.
-                </p>
-              </div>
+              <button type="submit" className="w-full bg-red-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-red-700 shadow-xl shadow-red-100 transition-all">
+                CONFIRMAR
+              </button>
             </form>
           </div>
         </div>

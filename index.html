@@ -5,32 +5,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agenda de Ministraciones | Grupo de Conexión</title>
+    
+    <!-- Librerías de Estilo -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Babel para transpilación en el navegador (Fix para GitHub Pages) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .calendar-grid { display: grid; grid-template-columns: 80px repeat(7, 1fr); }
-        /* Animación suave para modales */
         .animate-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Fix para evitar flash de contenido sin estilos */
+        [tabindex="-1"]:focus { outline: none !important; }
     </style>
-<script type="importmap">
+
+    <script type="importmap">
 {
   "imports": {
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.463.0",
+    "date-fns": "https://esm.sh/date-fns@4.1.0",
+    "date-fns/locale/es": "https://esm.sh/date-fns@4.1.0/locale/es",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
     "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "date-fns/": "https://esm.sh/date-fns@^4.1.0/",
-    "date-fns": "https://esm.sh/date-fns@^4.1.0"
+    "date-fns/": "https://esm.sh/date-fns@^4.1.0/"
   }
 }
 </script>
-<!-- Punto de entrada para que GitHub Pages reconozca el archivo -->
-<script type="module" src="./index.tsx"></script>
 </head>
 <body class="bg-white text-slate-900">
     <div id="root"></div>
+    
+    <!-- Cargamos el punto de entrada usando Babel -->
+    <script type="text/babel" data-type="module" data-presets="react,typescript-prop" src="./index.tsx"></script>
 </body>
 </html>
