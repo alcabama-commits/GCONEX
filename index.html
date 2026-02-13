@@ -30,9 +30,9 @@
     "lucide-react": "https://esm.sh/lucide-react@0.463.0",
     "date-fns": "https://esm.sh/date-fns@4.1.0",
     "date-fns/locale/es": "https://esm.sh/date-fns@4.1.0/locale/es",
+    "date-fns/": "https://esm.sh/date-fns@4.1.0/",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "date-fns/": "https://esm.sh/date-fns@^4.1.0/"
+    "react/": "https://esm.sh/react@^19.2.4/"
   }
 }
 </script>
@@ -40,7 +40,7 @@
 <body class="bg-white text-slate-900">
     <div id="root"></div>
     
-    <!-- Cargamos el punto de entrada usando Babel -->
-    <script type="text/babel" data-type="module" data-presets="react,typescript-prop" src="./index.tsx"></script>
+    <!-- El preset correcto es 'typescript'. 'typescript-prop' no existe y causaba el error de carga -->
+    <script type="text/babel" data-type="module" data-presets="react,typescript" src="./index.tsx"></script>
 </body>
 </html>
